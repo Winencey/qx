@@ -35,7 +35,7 @@ async function handleCookie(cookie) {
   if (saveSuccess && !$.isMute) {
     // 发送通知
 	const copyUrl = `qx://clipboard?text=${cookie}`;
-    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
+    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`, {"open-url": copyUrl});
   }
 }
 
