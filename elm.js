@@ -34,15 +34,9 @@ async function handleCookie(cookie) {
   const saveSuccess = await saveDataToEnv('eleme_svip_cookie', cookie);
   if (saveSuccess && !$.isMute) {
     // 发送通知
-	const copyUrl = `qx://clipboard?text=${cookie}`;
-    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`, {"open-url": copyUrl});
+    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
   }
 }
-
-
-
-
-
 
 async function saveDataToEnv(key, value) {
   try {
