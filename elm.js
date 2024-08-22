@@ -32,12 +32,11 @@ const $ = new Env('ElemeSVIPCookie');
 async function handleCookie(cookie) {
   // 保存Cookie
   const saveSuccess = await saveDataToEnv('eleme_svip_cookie', cookie);
-  if (saveSuccess && !$.isMute) {
-    // 发送通知
-    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`, {
-    "open-url": `qx://clipboard?text=${encodeURIComponent(cookie)}`
-});
-  }
+if (saveSuccess && !$.isMute) {
+    const copyUrl = `qx://clipboard?text=${encodeURIComponent(cookie)}`;
+    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`, {"open-url": copyUrl});
+}
+	
 }
 
 async function saveDataToEnv(key, value) {
