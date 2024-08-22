@@ -19,7 +19,6 @@ const $ = new Env('ElemeSVIPCookie');
     const cookie = $request.headers['Cookie'];
     if (cookie) {
       await handleCookie(cookie);
-	  await saveCookie(cookie);
     } else {
       $.msg("警告", "请求头中未找到Cookie");
     }
@@ -35,30 +34,22 @@ async function handleCookie(cookie) {
   const saveSuccess = await saveDataToEnv('eleme_svip_cookie', cookie);
   if (saveSuccess && !$.isMute) {
     // 发送通知
-    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
+    //$.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
+	
+	$.clipboard.set(cookie);
+    $.notify("已复制到剪贴板", "", "cookie已成功复制");
+    } 
+	
+	else {
+    $.notify("复制失败", "", "未找到cookie");
 	
 	
   }
 }
 
 
-// 添加用于复制cookie的函数
-async function copyCookie() {
-    let cookie = $prefs.valueForKey("elmCookie");
-    if (cookie) {
-        $.clipboard.set(cookie);
-        $.notify("已复制到剪贴板", "", "cookie已成功复制");
-    } else {
-        $.notify("复制失败", "", "未找到cookie");
-    }
-}
 
-async function saveCookie(cookie) {
-    // 保存cookie到指定环境变量
-    $.prefs.setValueForKey(cookie, "elmCookie");
-    // 弹出通知，并添加点击复制到剪贴板的功能
-    $.notify("Cookie抓取成功", "点击此通知复制cookie到剪贴板", cookie, {"open-url": "javascript:copyCookie()"});
-}
+
 
 
 async function saveDataToEnv(key, value) {
