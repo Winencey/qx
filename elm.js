@@ -38,7 +38,6 @@ async function handleCookie(cookie) {
   }
 }
 
-
 async function saveDataToEnv(key, value) {
   try {
     await $.setdata(value, key);
