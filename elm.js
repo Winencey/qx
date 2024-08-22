@@ -34,16 +34,8 @@ async function handleCookie(cookie) {
   const saveSuccess = await saveDataToEnv('eleme_svip_cookie', cookie);
   if (saveSuccess && !$.isMute) {
     // 发送通知
-    //$.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
-	
-	$.clipboard.set(cookie);
-    $.msg("已复制到剪贴板", "", "cookie已成功复制");
-    } 
-	
-	else {
-    $.msg("复制失败", "", "未找到cookie");
-	
-	
+	const copyUrl = `qx://clipboard?text=${cookie}`;
+    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
   }
 }
 
