@@ -34,8 +34,7 @@ async function handleCookie(cookie) {
   const saveSuccess = await saveDataToEnv('eleme_svip_cookie', cookie);
   if (saveSuccess && !$.isMute) {
     // 发送通知
-    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`, {
-    "open-url": `qx://clipboard?text=${encodeURIComponent(cookie)}`});
+    $.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
   }
 }
 
