@@ -37,11 +37,11 @@ async function handleCookie(cookie) {
     //$.msg("通知", "饿了么SVIP页面Cookie数据", `${cookie}`);
 	
 	$.clipboard.set(cookie);
-    $.notify("已复制到剪贴板", "", "cookie已成功复制");
+    $.msg("已复制到剪贴板", "", "cookie已成功复制");
     } 
 	
 	else {
-    $.notify("复制失败", "", "未找到cookie");
+    $.msg("复制失败", "", "未找到cookie");
 	
 	
   }
