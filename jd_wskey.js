@@ -3,7 +3,7 @@
 即可获取完整wskey，新旧版本京东通用
 
 [MITM]
-hostname = api-dd.jd.com
+hostname=api-dd.jd.com
 
 [rewrite_local]
 
