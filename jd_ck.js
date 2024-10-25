@@ -9,7 +9,7 @@ hostname = api.m.jd.com
 
 # pt_key 和 pt_pin
 # 京东
-^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=getSessionLog url script-request-body https://raw.githubusercontent.com/Winencey/qx/main/jd_ck.js
+^https:\/\/api\.m\.jd\.com\/client\.action\? url script-request-body https://raw.githubusercontent.com/Winencey/qx/main/jd_ck.js
 */
 
 
