@@ -3,7 +3,7 @@
 即可获取完整 pt_key 和 pt_pin，适用于新旧版本京东通用
 
 [MITM]
-hostname = api.m.jd.com
+hostname=api.m.jd.com
 
 [rewrite_local]
 
