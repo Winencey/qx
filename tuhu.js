@@ -176,36 +176,57 @@ async function whoami() {
 
 
 // 每日签到
-async function checkin(name) {  // 去掉suffix参数，因为不需要
+async function checkin(name) {
   let msg = '';
-  // 构造请求
+  
+  // 构造请求头 - 包含所有必要字段
+  let headers = {
+    'Authorization': `Bearer ${$.token}`,
+    'Content-Type': 'application/json',
+    'blackbox': $.blackbox,
+    'currentPage': 'memberMallPackage/pages/memberMall/memberTask',
+    'distinct_id': $.distinctId || 'b96b7703-03d4-405f-9ce3-14512ad8adca', // 使用默认值
+    'channel': 'wechat-miniprogram',
+    'authType': 'oauth', // 关键修复：添加缺失的authType
+    'deviceId': $.deviceId || '1758959286104-431819-09b6d9fd7eb1578-85659189', // 使用默认值
+    'api_level': '2',
+    'platformSource': 'uni-app',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.64(0x18004028) NetType/WIFI Language/zh_CN',
+    'Referer': 'https://servicewechat.com/wx27d20205249c56a3/1176/page-frame.html'
+  };
+  
+  // 添加位置信息（使用默认值）
+  headers['orion_biz_gps_longitude'] = '120.64898107841522';
+  headers['orion_biz_gps_latitude'] = '30.86748559430536';
+  headers['orion_biz_gps_province'] = encodeURIComponent('江苏省');
+  headers['orion_biz_gps_city'] = encodeURIComponent('苏州市');
+
   let opt = {
-    url: `https://cl-gateway.tuhu.cn/cl-common-api/api/dailyCheckIn/userCheckIn`,
-    method: 'POST', // 新增方法
-    headers: {
-      'Authorization': `Bearer ${$.token}`, // 修改为Bearer形式
-      'Content-Type': 'application/json',
-      'blackbox': $.blackbox,
-      // 新增User-Agent和Referer
-      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.64(0x18004028) NetType/WIFI Language/zh_CN',
-      'Referer': 'https://servicewechat.com/wx27d20205249c56a3/1176/page-frame.html'
-    },
-    body: JSON.stringify({ channel: "wxapp" }) // 请求体
+    url: 'https://cl-gateway.tuhu.cn/cl-common-api/api/dailyCheckIn/userCheckIn',
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({ channel: "wxapp" })
   };
 
-  var result = await Request(opt);
-  // 根据新接口的响应结构判断
-  if (result?.code == 0) {
-    // 成功签到，注意新接口返回的积分字段可能不同，这里暂时用原脚本的字段名，实际需要根据新接口返回调整
-    msg += `${name}签到成功, 积分 +${result.AddIntegral}, 连续签到: ${result.NeedDays}/7天 ✅`;
-  } else if (result?.code == 10024) {
-    msg += `${name}今日已签到 ✅`;
-  } else {
-    msg += `${name}签到失败, ${result?.message || $.toStr(result)}`;
+  try {
+    var result = await Request(opt);
+    
+    // 处理响应
+    if (result?.code === 0) {
+      msg += `${name}签到成功 ✅`;
+    } else if (result?.code === 10024) {
+      msg += `${name}今日已签到 ✅`;
+    } else {
+      msg += `${name}签到失败: ${result?.message || '未知错误'}`;
+    }
+  } catch (e) {
+    msg += `${name}请求异常: ${e.message}`;
   }
 
   $.messages.push(msg), $.log(msg);
 }
+
+
 
 
 // 获取用户积分
