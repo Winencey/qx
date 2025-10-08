@@ -63,26 +63,21 @@ script-providers:
  */
 
 const $ = new Env('途虎养车');
-$.is_debug = ($.isNode() ? process.env['IS_DEDUG'] : $.getdata('is_debug')) || 'false';  // 调试模式
-$.token = ($.isNode() ? process.env['TUHU_TOKEN'] : $.getdata('tuhu_token')) || '';  // Token
-$.blackbox = ($.isNode() ? process.env['TUHU_BLACKBOX'] : $.getdata('tuhu_blackbox')) || 'kMPSQ1710898198mf9JVT5oKB5';  // blackbox
+$.is_debug = ($.isNode() ? process.env['IS_DEDUG'] : $.getdata('is_debug')) || 'false';
+$.token = ($.isNode() ? process.env['TUHU_TOKEN'] : $.getdata('tuhu_token')) || '';
+$.blackbox = ($.isNode() ? process.env['TUHU_BLACKBOX'] : $.getdata('tuhu_blackbox')) || 'kMPSQ1710898198mf9JVT5oKB5';
 $.tokenArr = $.toObj($.token) || [];
-$.appid = 'wx27d20205249c56a3';  // 小程序 appId
+$.appid = 'wx27d20205249c56a3';
 $.messages = [];
-
 
 // 主函数
 async function main() {
-  // 获取微信 Code
   await getWxCode();
+  
   for (let i = 0; i < $.codeList.length; i++) {
-    // 初始化
     $.token = '';
     $.wx_code = $.codeList[i];
-
-    // 获取 Token
     await getToken();
-    // 把新的 Token 添加到 $.tokenArr
     $.token && $.tokenArr.push($.token);
   }
 
@@ -90,38 +85,32 @@ async function main() {
     $.log(`找到 ${$.tokenArr.length} 个 Token 变量 ✅`);
     for (let i = 0; i < $.tokenArr.length; i++) {
       $.log(`----- 账号 [${i + 1}] 开始执行 -----`);
-      // 初始化
       $.mobile = '';
       $.nickname = '';
       $.is_login = true;
-      $.token = $.tokenArr[i].startsWith('Bearer ') ? $.tokenArr[i] : 'Bearer ' + $.tokenArr[i];  // 补充 Bearer
+      $.token = $.tokenArr[i].startsWith('Bearer ') ? $.tokenArr[i] : 'Bearer ' + $.tokenArr[i];
 
       // 用户信息
       await whoami();
+      if (!$.is_login) continue;
 
-      if (!$.is_login) continue;  // 无效 token 跳出
-
-      // 每日签到
-      const taskMap = [
-        { "name": "软件", "url": "" },
-        { "name": "微信", "url": "?channel=wxapp" }
-      ]
-      for (item of taskMap) {
-        await checkin(item['url'], item['name']);
-      }
+      // 软件任务签到
+      await checkin('', '软件任务');
+      
+      // 微信任务签到
+      await checkin('wxapp', '微信任务');
 
       // 用户积分
       await getIntegral();
     }
     $.log(`----- 所有账号执行完成 -----`);
   } else {
-    throw new Error('未找到 Token 变量 ❌');
+    throw new Error('未找到 Token 变量 ❌❌');
   }
 }
 
 // 获取 Token
 async function getToken() {
-  // 构造请求
   const options = {
     url: `https://cl-gateway.tuhu.cn/cl-user-auth-login/login/authSilentSign`,
     headers: {
@@ -134,22 +123,19 @@ async function getToken() {
     })
   }
 
-  // 发起请求
   const result = await Request(options)
   if (result?.code == "10000") {
     const { mobile, userSession, userId, userName, nickName } = result.data;
     $.token = userSession;
     $.log(`✅ 成功获取 Token`);
   } else {
-    $.log(`❌ 获取 Token 失败: ${$.toStr(result)}`);
+    $.log(`❌❌ 获取 Token 失败: ${$.toStr(result)}`);
   }
 }
-
 
 // 获取用户信息
 async function whoami() {
   let msg = ''
-  // 构造请求
   const options = {
     url: `https://cl-gateway.tuhu.cn/cl-user-info-site/userAccount/getCurrentUserInfo`,
     headers: {
@@ -160,42 +146,40 @@ async function whoami() {
     body: `{}`
   }
 
-  // 发起请求
   const result = await Request(options);
   if (result?.code == 10000 && result?.data) {
     const { nickName, mobile } = result.data;
-    msg += `\n当前用户: ${nickName}`;
+    msg += `\n当前用户: ${nickName || mobile}`;
   } else if (/token无效/.test($.toStr(result))) {
     $.is_login = false;
-    msg += `${$.toStr(result)} ❌`;
+    msg += `${$.toStr(result)} ❌❌`;
   } else {
     $.log($.toStr(result));
   }
   $.messages.push(msg), $.log(msg);
 }
 
-
-// 每日签到
-async function checkin(name) {
+// 签到函数 - 区分软件任务和微信任务
+async function checkin(channel, name) {
   let msg = '';
   
-  // 构造请求头 - 包含所有必要字段
+  // 构造请求头
   let headers = {
-    'Authorization': `Bearer ${$.token}`,
+    'Authorization': $.token,
     'Content-Type': 'application/json',
     'blackbox': $.blackbox,
     'currentPage': 'memberMallPackage/pages/memberMall/memberTask',
-    'distinct_id': $.distinctId || 'b96b7703-03d4-405f-9ce3-14512ad8adca', // 使用默认值
+    'distinct_id': $.distinctId || 'b96b7703-03d4-405f-9ce3-14512ad8adca',
     'channel': 'wechat-miniprogram',
-    'authType': 'oauth', // 关键修复：添加缺失的authType
-    'deviceId': $.deviceId || '1758959286104-431819-09b6d9fd7eb1578-85659189', // 使用默认值
+    'authType': 'oauth',
+    'deviceId': $.deviceId || '1758959286104-431819-09b6d9fd7eb1578-85659189',
     'api_level': '2',
     'platformSource': 'uni-app',
     'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.64(0x18004028) NetType/WIFI Language/zh_CN',
     'Referer': 'https://servicewechat.com/wx27d20205249c56a3/1176/page-frame.html'
   };
   
-  // 添加位置信息（使用默认值）
+  // 位置信息
   headers['orion_biz_gps_longitude'] = '120.64898107841522';
   headers['orion_biz_gps_latitude'] = '30.86748559430536';
   headers['orion_biz_gps_province'] = encodeURIComponent('江苏省');
@@ -205,19 +189,22 @@ async function checkin(name) {
     url: 'https://cl-gateway.tuhu.cn/cl-common-api/api/dailyCheckIn/userCheckIn',
     method: 'POST',
     headers: headers,
-    body: JSON.stringify({ channel: "wxapp" })
+    body: JSON.stringify(channel ? { channel } : {})
   };
 
   try {
     var result = await Request(opt);
     
-    // 处理响应
+    // 优化响应处理逻辑
     if (result?.code === 0) {
       msg += `${name}签到成功 ✅`;
     } else if (result?.code === 10024) {
       msg += `${name}今日已签到 ✅`;
+    } else if (result?.code === 10000 && result?.message === "操作成功") {
+      msg += `${name}签到成功 ✅`;
     } else {
-      msg += `${name}签到失败: ${result?.message || '未知错误'}`;
+      const errorMsg = result?.message || '未知错误';
+      msg += `${name}签到失败: ${errorMsg} (code: ${result?.code || '未知'})`;
     }
   } catch (e) {
     msg += `${name}请求异常: ${e.message}`;
@@ -226,13 +213,9 @@ async function checkin(name) {
   $.messages.push(msg), $.log(msg);
 }
 
-
-
-
 // 获取用户积分
 async function getIntegral() {
   let msg = ''
-  // 构造请求
   const options = {
     url: `https://api.tuhu.cn/User/GetPersonalCenterQuantity`,
     headers: {
@@ -241,14 +224,39 @@ async function getIntegral() {
     }
   }
 
-  // 发起请求
   const result = await Request(options);
   if (result?.Code == 1) {
     msg += `查询积分: ${result.IntegralNumber} 分, 可抵现: ${result.IntegralNumber / 100} 元`;
   } else {
-    msg += `❌ 积分查询失败`;
+    msg += `❌❌ 积分查询失败`;
   }
   $.messages.push(msg), $.log(msg);
+}
+
+// 获取微信 Code
+async function getWxCode() {
+  try {
+    $.codeList = [];
+    $.codeServer = ($.isNode() ? process.env["CODESERVER_ADDRESS"] : $.getdata("@codeServer.address")) || '';
+    $.codeFuc = ($.isNode() ? process.env["CODESERVER_FUN"] : $.getdata("@codeServer.fun")) || '';
+    if (!$.codeServer) return $.log(`⚠️ 未配置微信 Code Server。`);
+
+    $.codeList = ($.codeFuc
+      ? (eval($.codeFuc), await WxCode($.appid))
+      : (await Request(`${$.codeServer}/?wxappid=${$.appid}`))?.split("|"))
+      .filter(item => item.length === 32);
+    $.log(`♻♻️ 获取到 ${$.codeList.length} 个微信 Code:\n${$.codeList}`);
+  } catch (e) {
+    $.logErr(`❌❌ 获取微信 Code 失败！`);
+  }
+}
+
+// 初始化设备ID
+if (!$.deviceId) {
+  $.deviceId = '1758959286104-431819-09b6d9fd7eb1578-85659189';
+}
+if (!$.distinctId) {
+  $.distinctId = 'b96b7703-03d4-405f-9ce3-14512ad8adca';
 }
 
 // 脚本执行入口
@@ -257,15 +265,14 @@ if (typeof $request !== `undefined`) {
   $.done();
 } else {
   !(async () => {
-    await main();  // 主函数
+    await main();
   })()
     .catch((e) => $.messages.push(e.message || e) && $.logErr(e))
     .finally(async () => {
-      await sendMsg($.messages.join('\n').trimStart().trimEnd());  // 推送通知
+      await sendMsg($.messages.join('\n').trimStart().trimEnd());
       $.done();
     })
 }
-
 
 // 获取签到数据
 function GetCookie() {
@@ -273,17 +280,17 @@ function GetCookie() {
     debug($request.headers);
     const headers = ObjectKeys2LowerCase($request.headers);
     $.newToken = headers['authorization'];
-    headers['blackbox'] && $.setdata(headers['blackbox'], 'tuhu_blackbox'), $.log(`blackbox: ${headers['blackbox']}`);  // 更新 blackbox
+    headers['blackbox'] && $.setdata(headers['blackbox'], 'tuhu_blackbox'), $.log(`blackbox: ${headers['blackbox']}`);
     if (/User\/GetInternalCenterInfo/.test($request.url) && !new RegExp($.newToken).test($.token)) {
       $.tokenArr.push($.newToken);
       $.log(`开始新增用户数据 ${$.newToken}`);
       $.setdata($.toStr($.tokenArr), 'tuhu_token');
-      $.msg($.name, ``, `Token 获取成功。🎉`);
+      $.msg($.name, ``, `Token 获取成功。🎉🎉`);
     } else {
       $.log(`无需更新 Token: ${$.newToken}`);
     }
   } catch (e) {
-    $.log("❌ 签到数据获取失败"), $.log(e);
+    $.log("❌❌ 签到数据获取失败"), $.log(e);
   }
 }
 
